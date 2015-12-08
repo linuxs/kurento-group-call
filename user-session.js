@@ -1,12 +1,11 @@
 /**
  * Created by eak on 9/14/15.
  */
-function UserSession(id, socket, roomName) {
+function UserSession(id, socket) {
     this.id = id;
     this.socket = socket;
     this.outgoingMedia = null;
     this.incomingMedia = {};
-    this.roomName = roomName;
     this.iceCandidateQueue = {};
 }
 
@@ -45,5 +44,9 @@ UserSession.prototype.addIceCandidate = function (data, candidate) {
 UserSession.prototype.sendMessage = function (data) {
     this.socket.emit('message', data);
 };
+
+UserSession.prototype.setRoomName = function (roomName){
+    this.roomName = roomName;
+}
 
 module.exports = UserSession;

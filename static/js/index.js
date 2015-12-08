@@ -9,17 +9,6 @@ var sessionId;
 
 var participants = {};
 
-$(document).ready(function () {
-    $("#register").click(function () {
-        $("#register").prop("disabled", true);
-        register();
-    });
-});
-
-window.onload = function () {
-    mainVideo = $("#main_video")[0];
-};
-
 window.onbeforeunload = function () {
 
     // clear main video
@@ -81,6 +70,8 @@ function sendMessage(data) {
 }
 
 function register() {
+    document.getElementById('register').disabled = true;
+    mainVideo = document.getElementById("main_video");
     var data = {
         id: "joinRoom",
         roomName: document.getElementById('roomName').value
@@ -166,7 +157,7 @@ function onParticipantLeft(message) {
     delete participants[message.sessionId];
 
     // remove video tag
-    $("#video-" + participant.id).remove();
+    document.getElementById("video-" + participant.id).remove();
 }
 
 function onReceiveVideoAnswer(message) {
@@ -188,9 +179,13 @@ function onReceiveVideoAnswer(message) {
 function createVideoForParticipant(participant) {
 
     var videoId = "video-" + participant.id;
-    var videoHtml = '<video id="' + videoId + '" autoplay width="320px" height="240px" poster="img/webrtc.png"></video>';
-    $("#video_list").append(videoHtml);
+    var video = document.createElement('video');
+
+    video.autoplay = true;
+    video.id = videoId;
+
+    document.getElementById("video_list").appendChild(video);
 
     // return video element
-    return $("#" + videoId)[0];
+    return document.getElementById(videoId);
 }

@@ -23,16 +23,13 @@ var express = require('express');
 
 // kurento required
 var path = require('path');
-var minimist = require('minimist');
 var url = require('url');
 var kurento = require('kurento-client');
 
-var argv = minimist(process.argv.slice(2), {
-    default: {
+var argv = {
         as_uri: "http://localhost:8080/",
         ws_uri: "ws://localhost:8888/kurento"
-    }
-});
+};
 
 var kurentoClient = null;
 
@@ -146,7 +143,8 @@ function getRoom(roomName, callback) {
 
 function join(socket, room, callback) {
     // create user session
-    var userSession = new UserSession(socket.id, socket, room.name);
+    var userSession = new UserSession(socket.id, socket);
+    userSession.setRoomName(room.name);
     room.pipeline.create('WebRtcEndpoint', function (error, outgoingMedia) {
         if (error) {
             console.error('no participant in room');
@@ -208,6 +206,47 @@ function join(socket, room, callback) {
         userRegistry.register(userSession);
         callback(null, userSession);
     });
+}
+
+function leaveRoom(sessionId, callback) {
+    var userSession = userRegistry.getById(sessionId);
+
+    if (!userSession) {
+        return;
+    }
+
+    var room = rooms[userSession.roomName];
+
+    console.log('notify all user that ' + userSession.id + ' is leaving the room ' + room.name);
+
+    var usersInRoom = room.participants;
+    delete usersInRoom[userSession.id];
+
+    userSession.outgoingMedia.release();
+    // release incoming media for the leaving user
+    for (var i in userSession.incomingMedia) {
+        userSession.incomingMedia[i].release();
+        delete userSession.incomingMedia[i];
+    }
+
+    var data = {
+        id: 'participantLeft',
+        sessionId: userSession.id
+    };
+    for (var i in usersInRoom) {
+        var user = usersInRoom[i];
+        // release viewer from this
+        user.incomingMedia[userSession.id].release();
+        delete user.incomingMedia[userSession.id];
+
+        // notify all user in the room
+        user.sendMessage(data);
+    }
+    stop(userSession.id);
+}
+
+function stop(sessionId) {
+    userRegistry.unregister(sessionId);
 }
 
 function receiveVideoFrom(socket, senderId, sdpOffer, callback) {
@@ -304,47 +343,6 @@ function getEndpointForUser(userSession, sender, callback) {
             callback(null, incoming);
         });
     }
-}
-
-function leaveRoom(sessionId, callback) {
-    var userSession = userRegistry.getById(sessionId);
-
-    if (!userSession) {
-        return;
-    }
-
-    var room = rooms[userSession.roomName];
-
-    console.log('notify all user that ' + userSession.id + ' is leaving the room ' + room.name);
-
-    var usersInRoom = room.participants;
-    delete usersInRoom[userSession.id];
-
-    userSession.outgoingMedia.release();
-    // release incoming media for the leaving user
-    for (var i in userSession.incomingMedia) {
-        userSession.incomingMedia[i].release();
-        delete userSession.incomingMedia[i];
-    }
-
-    var data = {
-        id: 'participantLeft',
-        sessionId: userSession.id
-    };
-    for (var i in usersInRoom) {
-        var user = usersInRoom[i];
-        // release viewer from this
-        user.incomingMedia[userSession.id].release();
-        delete user.incomingMedia[userSession.id];
-
-        // notify all user in the room
-        user.sendMessage(data);
-    }
-    stop(userSession.id);
-}
-
-function stop(sessionId) {
-    userRegistry.unregister(sessionId);
 }
 
 function addIceCandidate(socket, message) {
