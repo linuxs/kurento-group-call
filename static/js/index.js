@@ -27,7 +27,7 @@ socket.on("id", function (id) {
 socket.on("message", function (message) {
     switch (message.id) {
         case "existingParticipants":
-            console.log("existingParticipans : " + message.data);
+            console.log("existingParticipants : " + message.data);
             onExistingParticipants(message);
             break;
         case "newParticipantArrived":
