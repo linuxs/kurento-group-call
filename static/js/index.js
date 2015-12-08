@@ -58,7 +58,6 @@ socket.on("message", function (message) {
             var participant = participants[message.sessionId];
             if (participant != null) {
                 console.log(message.candidate);
-                //if (participant.isAnswer) {
                 participant.rtcPeer.addIceCandidate(message.candidate, function (error) {
                     if (error) {
                         if (message.sessionId === sessionId) {
@@ -84,7 +83,7 @@ function sendMessage(data) {
 function register() {
     var data = {
         id: "joinRoom",
-        roomName: "Test"
+        roomName: document.getElementById('roomName').value
     };
     sendMessage(data);
 }

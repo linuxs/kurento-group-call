@@ -39,7 +39,6 @@ var kurentoClient = null;
 /*
  * Server startup
  */
-
 var app = express();
 var asUrl = url.parse(argv.as_uri);
 var port = asUrl.port;
@@ -51,7 +50,6 @@ var server = app.listen(port, function () {
 var io = require('socket.io')(server);
 
 io.on('connection', function (socket) {
-
     var userList = '';
     for (var userId in userRegistry.usersById) {
         userList += ' ' + userId + ',';
@@ -125,7 +123,7 @@ function getRoom(roomName, callback) {
                 return callback(error);
             }
 
-            // create pipeline
+            // create pipeline for room
             kurentoClient.create('MediaPipeline', function (error, pipeline) {
                 if (error) {
                     return callback(error);
@@ -266,7 +264,7 @@ function getEndpointForUser(userSession, sender, callback) {
                     }
                     return callback(error);
                 }
-                console.log('user : ' + userSession.id + ' successfully create pipeline');
+                console.log('user : ' + userSession.id + ' successfully created pipeline');
                 userSession.incomingMedia[sender.id] = incomingMedia;
 
                 // add ice candidate the get sent before endpoint is established
