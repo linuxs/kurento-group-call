@@ -183,7 +183,7 @@ function createVideoForParticipant(participant) {
 
     video.autoplay = true;
     video.id = videoId;
-
+    video.poster = "img/webrtc.png";
     document.getElementById("video_list").appendChild(video);
 
     // return video element
