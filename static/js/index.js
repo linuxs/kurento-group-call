@@ -12,9 +12,9 @@ var participants = {};
 window.onbeforeunload = function () {
 
     // clear main video
-    mainVideo.pause();
+    /*mainVideo.pause();
     mainVideo.src = "";
-    mainVideo.load();
+    mainVideo.load();*/
     socket.disconnect();
 };
 
@@ -156,8 +156,12 @@ function onParticipantLeft(message) {
     participant.dispose();
     delete participants[message.sessionId];
 
+    console.log("video-" + participant.id);
     // remove video tag
-    document.getElementById("video-" + participant.id).remove();
+    //document.getElementById("video-" + participant.id).remove();
+    var video = document.getElementById("video-" + participant.id);
+    console.log(video);
+    video.parentNode.removeChild(video);
 }
 
 function onReceiveVideoAnswer(message) {

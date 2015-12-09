@@ -21,11 +21,15 @@ Participant.prototype.offerToReceiveVideo = function (error, offerSdp) {
 };
 
 Participant.prototype.onIceCandidate = function (candidate) {
-    console.log(this.id + " Local candidate" + JSON.stringify(candidate));
+    //console.log(this.id + " Local candidate" + JSON.stringify(candidate));
 
     var message = {
         id: 'onIceCandidate',
-        candidate: candidate,
+        candidate : {
+            candidate : candidate.candidate,
+            sdpMid: candidate.sdpMid,
+            sdpMLineIndex: candidate.sdpMLineIndex
+        },
         sender: this.id
     };
     sendMessage(message);

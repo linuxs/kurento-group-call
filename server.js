@@ -26,9 +26,9 @@ var path = require('path');
 var url = require('url');
 var kurento = require('kurento-client');
 
-var argv = {
-        as_uri: "http://localhost:8080/",
-        ws_uri: "ws://localhost:8888/kurento"
+var settings = {
+        WEBSOCKETURL: "http://localhost:8080/",
+        KURENTOURL: "ws://localhost:8888/kurento"
 };
 
 var kurentoClient = null;
@@ -37,7 +37,7 @@ var kurentoClient = null;
  * Server startup
  */
 var app = express();
-var asUrl = url.parse(argv.as_uri);
+var asUrl = url.parse(settings.WEBSOCKETURL);
 var port = asUrl.port;
 var server = app.listen(port, function () {
     console.log('Kurento Tutorial started');
@@ -362,9 +362,9 @@ function getKurentoClient(callback) {
         return callback(null, kurentoClient);
     }
 
-    kurento(argv.ws_uri, function (error, _kurentoClient) {
+    kurento(settings.KURENTOURL, function (error, _kurentoClient) {
         if (error) {
-            var message = 'Coult not find media server at address ' + argv.ws_uri;
+            var message = 'Coult not find media server at address ' + settings.KURENTOURL;
             return callback(message + ". Exiting with error " + error);
         }
 
