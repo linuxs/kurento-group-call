@@ -1,8 +1,10 @@
 # Kurento Many2Many demo
 
-This demo requires a Linux installation as it requires the Kurento Media Server.
+This demo requires a Linux installation as it needs the Kurento Media Server.
 
 Adapted from [explore-kurento-group-call by sainttail](https://github.com/sainttail/explore-kurento-group-call)
+
+### Installation
 
 Start [Kurento Media Server](https://www.kurento.org/docs/current/installation_guide.html) on port 8888 (default).
 
