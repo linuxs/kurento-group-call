@@ -7,6 +7,7 @@ Adapted from [explore-kurento-group-call by sainttail](https://github.com/saintt
 Start [Kurento Media Server](https://www.kurento.org/docs/current/installation_guide.html) on port 8888 (default).
 
 Enter the root folder and run `npm install`
+
 Enter the static folder and run `bower install`
 
 ### Test in browser
