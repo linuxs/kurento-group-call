@@ -1,0 +1,15 @@
+.classpath
+.project
+.settings/
+*~
+bower.json
+junitResult.xml
+lcovResult.lcov
+doc/
+lib-cov/
+node_modules/
+src/
+target/
+npm-debug.log
+reports/
+.idea/

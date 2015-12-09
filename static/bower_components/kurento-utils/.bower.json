@@ -1,32 +1,13 @@
 {
   "name": "kurento-utils",
-  "description": "Kurento Utilities",
-  "license": "LGPL-2.1",
-  "keywords": [
-    "API",
-    "Kurento",
-    "WebRTC"
-  ],
-  "homepage": "http://www.kurento.org",
-  "repository": {
-    "type": "git",
-    "url": "Kurento/kurento-utils-js"
-  },
-  "authors": [
-    "Kurento <info@kurento.org> (http://kurento.org)",
-    "Ivan Gracia <izanmail@gmail.com>",
-    "Jesús Leganés Combarro 'piranna' <piranna@gmail.com>"
-  ],
-  "main": [
-    "js/kurento-utils.js"
-  ],
-  "_release": "04ef65723d",
+  "homepage": "https://github.com/Mobilea/kurento-utils-js",
+  "_release": "cb3848cbae",
   "_resolution": {
     "type": "branch",
     "branch": "master",
-    "commit": "04ef65723df600a47095bd71461de1efe67d731c"
+    "commit": "cb3848cbaee241cd05cd9126a90498d80c6a4bf8"
   },
-  "_source": "git://github.com/Kurento/kurento-utils-bower.git",
+  "_source": "https://github.com/Mobilea/kurento-utils-js.git",
   "_target": "master",
-  "_originalSource": "kurento-utils"
+  "_originalSource": "https://github.com/Mobilea/kurento-utils-js.git"
 }

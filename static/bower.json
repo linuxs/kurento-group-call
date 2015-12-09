@@ -19,7 +19,6 @@
         "tests"
     ],
     "dependencies": {
-        "adapter.js": "*",
-        "kurento-utils": "master"
+        "kurento-utils": "https://github.com/Mobilea/kurento-utils-js.git#master"
     }
 }

@@ -2,8 +2,8 @@
 
 Copyright © 2013-2016 [Kurento]. Licensed under [LGPL v2.1 License].
 
-Kurento Utils for Node.js and Browsers
-======================================
+Kurento Utils for Bower
+=======================
 
 The Kurento Utils project contains a set of reusable components that have been
 found useful during the development of the WebRTC applications with Kurento.
@@ -21,43 +21,20 @@ sudo apt-get install -y nodejs
 sudo npm install -g bower
 ```
 
-To install the library, it's recommended to do that from the [NPM repository] :
+To install the library, it's recommended to do that from the [Bower repository] :
 
 ```bash
-npm install kurento-utils
+bower install kurento-utils
 ```
 
 Alternatively, you can download the code using git and install manually its
 dependencies:
 
 ```bash
-git clone https://github.com/Kurento/kurento-utils
-cd kurento-utils
+git clone https://github.com/Kurento/kurento-utils-bower
+cd kurento-utils-bower
 npm install
 ```
-
-Screen and window sharing depends on the privative module
-```kurento-browser-extensions```. To enable its support, you'll need to install
-the package dependency manually or use a ```getScreenConstraints``` function
-yourself on runtime. If it's not available, when trying to share the screen or
-a window content it will throw an exception.
-
-### Browser
-
-To build the browser version of the library you'll only need to exec the [grunt]
-task runner and they will be generated on the ```dist``` folder. Alternatively,
-if you don't have it globally installed, you can run a local copy by executing
-
-```bash
-node_modules/.bin/grunt
-```
-
-Acknowledges
-------------
-
-* [Bertrand CHEVRIER](https://github.com/krampstudio) for
-  [grunt-jsdoc](https://github.com/krampstudio/grunt-jsdoc)
-
 
 Kurento
 =======
