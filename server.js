@@ -97,6 +97,12 @@ io.on('connection', function (socket) {
     });
 });
 
+/**
+ * Gets and joins room
+ * @param socket
+ * @param roomName
+ * @param callback
+ */
 function joinRoom(socket, roomName, callback) {
     getRoom(roomName, function (error, room) {
         if (error) {
@@ -109,6 +115,11 @@ function joinRoom(socket, roomName, callback) {
     });
 }
 
+/**
+ * Gets room. Creates room if room does not exist
+ * @param roomName
+ * @param callback
+ */
 function getRoom(roomName, callback) {
 
     var room = rooms[roomName];

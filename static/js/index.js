@@ -10,11 +10,6 @@ var sessionId;
 var participants = {};
 
 window.onbeforeunload = function () {
-
-    // clear main video
-    /*mainVideo.pause();
-    mainVideo.src = "";
-    mainVideo.load();*/
     socket.disconnect();
 };
 
@@ -160,7 +155,8 @@ function onParticipantLeft(message) {
     // remove video tag
     //document.getElementById("video-" + participant.id).remove();
     var video = document.getElementById("video-" + participant.id);
-    console.log(video);
+
+    // Internet Explorer doesn't know element.remove(), does know this
     video.parentNode.removeChild(video);
 }
 
@@ -180,6 +176,11 @@ function onReceiveVideoAnswer(message) {
     });
 }
 
+/**
+ * Create video DOM element
+ * @param participant
+ * @returns {Element}
+ */
 function createVideoForParticipant(participant) {
 
     var videoId = "video-" + participant.id;
