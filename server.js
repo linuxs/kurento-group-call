@@ -64,7 +64,8 @@ io.on('connection', function (socket) {
     socket.on('disconnect', function (data) {
         console.log('Connection: ' + socket.id + ' disconnect : ' + data);
         leaveRoom(socket.id, function () {
-
+            var userSession = userRegistry.getById(socket.id);
+            stop(userSession.id);
         });
     });
 
@@ -72,6 +73,13 @@ io.on('connection', function (socket) {
         console.log('Connection: ' + socket.id + ' receive message: ' + message.id);
 
         switch (message.id) {
+            case 'register':
+                console.log('registering ' + socket.id);
+                register(socket, message.name, function(){
+
+                });
+
+                break;
             case 'joinRoom':
                 console.log(socket.id + ' joinRoom : ' + message.roomName);
                 joinRoom(socket, message.roomName, function () {
@@ -86,7 +94,11 @@ io.on('connection', function (socket) {
                 break;
             case 'leaveRoom':
                 console.log(socket.id + ' leaveRoom');
-                leaveRoom(socket);
+                leaveRoom(socket.id);
+                break;
+            case 'call':
+                console.log("Calling");
+                call(socket.id, message.to, message.from, message.roomName);
                 break;
             case 'onIceCandidate':
                 addIceCandidate(socket, message);
@@ -96,6 +108,17 @@ io.on('connection', function (socket) {
         }
     });
 });
+
+function register(socket, name, callback){
+    var userSession = new UserSession(socket.id, socket);
+    userSession.name = name;
+    userRegistry.register(userSession);
+    userSession.sendMessage({
+        id: 'registered',
+        data: 'Successfully registered ' + socket.id
+    });
+    console.log(userRegistry);
+}
 
 /**
  * Gets and joins room
@@ -154,7 +177,7 @@ function getRoom(roomName, callback) {
 
 function join(socket, room, callback) {
     // create user session
-    var userSession = new UserSession(socket.id, socket);
+    var userSession = userRegistry.getById(socket.id);
     userSession.setRoomName(room.name);
     room.pipeline.create('WebRtcEndpoint', function (error, outgoingMedia) {
         if (error) {
@@ -215,6 +238,7 @@ function join(socket, room, callback) {
 
         // register user in system
         userRegistry.register(userSession);
+
         callback(null, userSession);
     });
 }
@@ -228,6 +252,9 @@ function leaveRoom(sessionId, callback) {
 
     var room = rooms[userSession.roomName];
 
+    if(!room){
+        return;
+    }
     console.log('notify all user that ' + userSession.id + ' is leaving the room ' + room.name);
 
     var usersInRoom = room.participants;
@@ -253,11 +280,40 @@ function leaveRoom(sessionId, callback) {
         // notify all user in the room
         user.sendMessage(data);
     }
-    stop(userSession.id);
 }
 
 function stop(sessionId) {
     userRegistry.unregister(sessionId);
+}
+
+function call(callerId, to, from, roomName) {
+    if(to === from){
+        return;
+    }
+    var caller = userRegistry.getById(callerId);
+    var rejectCause = 'User ' + to + ' is not registered';
+    if (userRegistry.getByName(to)) {
+        var callee = userRegistry.getByName(to);
+        callee.peer = from;
+        caller.peer = to;
+        var message = {
+            id: 'incomingCall',
+            from: from,
+            roomName: roomName
+        };
+        try{
+            return callee.sendMessage(message);
+        } catch(exception) {
+            rejectCause = "Error " + exception;
+        }
+    }
+    var message  = {
+        id: 'callResponse',
+        response: 'rejected: ',
+        message: rejectCause
+    };
+    console.log("NO EXIST SOZ");
+    caller.sendMessage(message);
 }
 
 function receiveVideoFrom(socket, senderId, sdpOffer, callback) {

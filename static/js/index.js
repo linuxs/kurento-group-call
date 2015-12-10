@@ -21,6 +21,16 @@ socket.on("id", function (id) {
 // message handler
 socket.on("message", function (message) {
     switch (message.id) {
+        case "registered":
+            console.log(message.data);
+            break;
+        case "incomingCall":
+            incomingCall(message);
+            break;
+        case "callResponse":
+            console.log(message);
+            console.log(message.message);
+            break;
         case "existingParticipants":
             console.log("existingParticipants : " + message.data);
             onExistingParticipants(message);
@@ -65,13 +75,98 @@ function sendMessage(data) {
 }
 
 function register() {
+    document.getElementById('userName').disabled = true;
     document.getElementById('register').disabled = true;
+    document.getElementById('joinRoom').disabled = false;
+    document.getElementById('roomName').disabled = false;
+    document.getElementById('sendInvite').disabled = false;
+    document.getElementById('otherUserName').disabled = false;
     mainVideo = document.getElementById("main_video");
     var data = {
-        id: "joinRoom",
-        roomName: document.getElementById('roomName').value
+        id: "register",
+        name: document.getElementById('userName').value
     };
     sendMessage(data);
+}
+
+function joinRoom(roomName) {
+    document.getElementById('roomName').disabled = true;
+    document.getElementById('joinRoom').disabled = true;
+    document.getElementById('sendInvite').disabled = false;
+    document.getElementById('otherUserName').disabled = false;
+    document.getElementById('joinRoom').disabled = false;
+    if(!document.getElementById('roomName').value){
+        document.getElementById('roomName').value = roomName;
+    }
+
+    var data = {
+        id: "joinRoom",
+        roomName: roomName
+    };
+    sendMessage(data);
+}
+
+function call() {
+    var roomName;
+    console.log(participants);
+    console.log(Object.keys(participants).length);
+    // Not currently in a room
+    if(Object.keys(participants).length == 0){
+        roomName = generateUUID();
+        document.getElementById('roomName').value = roomName;
+        var data = {
+            id: "joinRoom",
+            roomName: roomName
+        };
+        sendMessage(data);
+        document.getElementById('roomName').disabled = true;
+        document.getElementById('joinRoom').disabled = true;
+    }
+    // In a room
+    else{
+        roomName = document.getElementById('roomName').value
+    }
+    var message = {
+        id : 'call',
+        from : document.getElementById('userName').value,
+        to : document.getElementById('otherUserName').value,
+        roomName: roomName
+    };
+    sendMessage(message);
+}
+
+function leaveRoom(){
+    var myNode = document.getElementById("video_list");
+    while (myNode.firstChild) {
+        myNode.removeChild(myNode.firstChild);
+    }
+    document.getElementById('leaveRoom').disabled = true;
+    document.getElementById('roomName').disabled = false;
+    document.getElementById('joinRoom').disabled = false;
+    document.getElementById('sendInvite').disabled = false;
+    document.getElementById('otherUserName').disabled = false;
+    var message = {
+        id: "leaveRoom"
+    };
+    sendMessage(message);
+    participants = {};
+}
+
+function incomingCall(message) {
+    var joinRoomMessage = message;
+    if (confirm('User ' + message.from
+            + ' is calling you. Do you accept the call?')) {
+        leaveRoom();
+        joinRoom(joinRoomMessage.roomName);
+    } else {
+        var response = {
+            id : 'incomingCallResponse',
+            from : message.from,
+            callResponse : 'reject',
+            message : 'user declined'
+        };
+        sendMessage(response);
+    }
 }
 
 function onExistingParticipants(message) {
@@ -193,4 +288,17 @@ function createVideoForParticipant(participant) {
 
     // return video element
     return document.getElementById(videoId);
+}
+
+function generateUUID(){
+    var d = new Date().getTime();
+    if(window.performance && typeof window.performance.now === "function"){
+        d += performance.now();; //use high-precision timer if available
+    }
+    var uuid = 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
+        var r = (d + Math.random()*16)%16 | 0;
+        d = Math.floor(d/16);
+        return (c=='x' ? r : (r&0x3|0x8)).toString(16);
+    });
+    return uuid;
 }
