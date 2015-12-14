@@ -26,11 +26,13 @@ var path = require('path');
 var url = require('url');
 var kurento = require('kurento-client');
 
+// Constants
 var settings = {
         WEBSOCKETURL: "http://localhost:8080/",
         KURENTOURL: "ws://localhost:8888/kurento"
 };
 
+// Singleton Kurento Client, gets set on first interaction
 var kurentoClient = null;
 
 /*
@@ -46,6 +48,9 @@ var server = app.listen(port, function () {
 
 var io = require('socket.io')(server);
 
+/**
+ * Message handlers
+ */
 io.on('connection', function (socket) {
     var userList = '';
     for (var userId in userRegistry.usersById) {
@@ -98,7 +103,7 @@ io.on('connection', function (socket) {
                 break;
             case 'call':
                 console.log("Calling");
-                call(socket.id, message.to, message.from, message.roomName);
+                call(socket.id, message.to, message.from);
                 break;
             case 'onIceCandidate':
                 addIceCandidate(socket, message);
@@ -109,6 +114,12 @@ io.on('connection', function (socket) {
     });
 });
 
+/**
+ * Register user to server
+ * @param socket
+ * @param name
+ * @param callback
+ */
 function register(socket, name, callback){
     var userSession = new UserSession(socket.id, socket);
     userSession.name = name;
@@ -131,7 +142,6 @@ function joinRoom(socket, roomName, callback) {
         if (error) {
             callback(error)
         }
-
         join(socket, room, function (error, user) {
             console.log('join success : ' + user.id);
         });
@@ -175,10 +185,17 @@ function getRoom(roomName, callback) {
     }
 }
 
+/**
+ * Join (conference) call room
+ * @param socket
+ * @param room
+ * @param callback
+ */
 function join(socket, room, callback) {
     // create user session
     var userSession = userRegistry.getById(socket.id);
     userSession.setRoomName(room.name);
+
     room.pipeline.create('WebRtcEndpoint', function (error, outgoingMedia) {
         if (error) {
             console.error('no participant in room');
@@ -243,6 +260,11 @@ function join(socket, room, callback) {
     });
 }
 
+/**
+ * Leave (conference) call room
+ * @param sessionId
+ * @param callback
+ */
 function leaveRoom(sessionId, callback) {
     var userSession = userRegistry.getById(sessionId);
 
@@ -255,11 +277,10 @@ function leaveRoom(sessionId, callback) {
     if(!room){
         return;
     }
-    console.log('notify all user that ' + userSession.id + ' is leaving the room ' + room.name);
 
+    console.log('notify all user that ' + userSession.id + ' is leaving the room ' + room.name);
     var usersInRoom = room.participants;
     delete usersInRoom[userSession.id];
-
     userSession.outgoingMedia.release();
     // release incoming media for the leaving user
     for (var i in userSession.incomingMedia) {
@@ -280,20 +301,40 @@ function leaveRoom(sessionId, callback) {
         // notify all user in the room
         user.sendMessage(data);
     }
+
+    delete userSession.roomName;
 }
 
+/**
+ * Unregister user
+ * @param sessionId
+ */
 function stop(sessionId) {
     userRegistry.unregister(sessionId);
 }
 
-function call(callerId, to, from, roomName) {
+/**
+ * Invite other user to a (conference) call
+ * @param callerId
+ * @param to
+ * @param from
+ */
+function call(callerId, to, from) {
     if(to === from){
         return;
     }
+    var roomName;
     var caller = userRegistry.getById(callerId);
     var rejectCause = 'User ' + to + ' is not registered';
     if (userRegistry.getByName(to)) {
         var callee = userRegistry.getByName(to);
+        if(!caller.roomName){
+            roomName = generateUUID();
+            joinRoom(caller.socket, roomName);
+        }
+        else{
+            roomName = caller.roomName;
+        }
         callee.peer = from;
         caller.peer = to;
         var message = {
@@ -312,10 +353,16 @@ function call(callerId, to, from, roomName) {
         response: 'rejected: ',
         message: rejectCause
     };
-    console.log("NO EXIST SOZ");
     caller.sendMessage(message);
 }
 
+/**
+ * Retrieve sdpOffer from other user, required for WebRTC calls
+ * @param socket
+ * @param senderId
+ * @param sdpOffer
+ * @param callback
+ */
 function receiveVideoFrom(socket, senderId, sdpOffer, callback) {
     var userSession = userRegistry.getById(socket.id);
     var sender = userRegistry.getById(senderId);
@@ -347,6 +394,12 @@ function receiveVideoFrom(socket, senderId, sdpOffer, callback) {
     });
 }
 
+/**
+ * Get user WebRTCEndPoint, Required for WebRTC calls
+ * @param userSession
+ * @param sender
+ * @param callback
+ */
 function getEndpointForUser(userSession, sender, callback) {
     // request for self media
     if (userSession.id === sender.id) {
@@ -412,6 +465,11 @@ function getEndpointForUser(userSession, sender, callback) {
     }
 }
 
+/**
+ * Add ICE candidate, required for WebRTC calls
+ * @param socket
+ * @param message
+ */
 function addIceCandidate(socket, message) {
     var user = userRegistry.getById(socket.id);
     if (user != null) {
@@ -423,7 +481,11 @@ function addIceCandidate(socket, message) {
     }
 }
 
-// Recover kurentoClient for the first time.
+/**
+ * Retrieve Kurento Client to connect to Kurento Media Server, required for WebRTC calls
+ * @param callback
+ * @returns {*}
+ */
 function getKurentoClient(callback) {
     if (kurentoClient !== null) {
         return callback(null, kurentoClient);
@@ -440,4 +502,17 @@ function getKurentoClient(callback) {
     });
 }
 
+/**
+ * Generate unique ID, used for generating new rooms
+ * @returns {string}
+ */
+function generateUUID(){
+    var d = new Date().getTime();
+    var uuid = 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
+        var r = (d + Math.random()*16)%16 | 0;
+        d = Math.floor(d/16);
+        return (c=='x' ? r : (r&0x3|0x8)).toString(16);
+    });
+    return uuid;
+}
 app.use(express.static(path.join(__dirname, 'static')));

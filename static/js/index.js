@@ -70,17 +70,19 @@ socket.on("message", function (message) {
     }
 });
 
+/**
+ * Send message to server
+ * @param data
+ */
 function sendMessage(data) {
     socket.emit("message", data);
 }
 
+/**
+ * Register to server
+ */
 function register() {
-    document.getElementById('userName').disabled = true;
-    document.getElementById('register').disabled = true;
-    document.getElementById('joinRoom').disabled = false;
-    document.getElementById('roomName').disabled = false;
-    document.getElementById('sendInvite').disabled = false;
-    document.getElementById('otherUserName').disabled = false;
+    disableElements("register");
     mainVideo = document.getElementById("main_video");
     var data = {
         id: "register",
@@ -89,15 +91,16 @@ function register() {
     sendMessage(data);
 }
 
+/**
+ * Check if roomName exists, use DOM roomName otherwise, then join room
+ * @param roomName
+ */
 function joinRoom(roomName) {
-    document.getElementById('roomName').disabled = true;
-    document.getElementById('joinRoom').disabled = true;
-    document.getElementById('sendInvite').disabled = false;
-    document.getElementById('otherUserName').disabled = false;
-    document.getElementById('joinRoom').disabled = false;
-    if(!document.getElementById('roomName').value){
-        document.getElementById('roomName').value = roomName;
+    disableElements('joinRoom');
+    if(typeof roomName == 'undefined'){
+        roomName = document.getElementById('roomName').value;
     }
+    document.getElementById('roomName').value = roomName;
 
     var data = {
         id: "joinRoom",
@@ -106,57 +109,51 @@ function joinRoom(roomName) {
     sendMessage(data);
 }
 
+/**
+ * Invite other user to a conference call
+ */
 function call() {
-    var roomName;
-    console.log(participants);
-    console.log(Object.keys(participants).length);
     // Not currently in a room
-    if(Object.keys(participants).length == 0){
-        roomName = generateUUID();
-        document.getElementById('roomName').value = roomName;
-        var data = {
-            id: "joinRoom",
-            roomName: roomName
-        };
-        sendMessage(data);
-        document.getElementById('roomName').disabled = true;
-        document.getElementById('joinRoom').disabled = true;
-    }
-    // In a room
-    else{
-        roomName = document.getElementById('roomName').value
-    }
+    disableElements("call");
     var message = {
         id : 'call',
         from : document.getElementById('userName').value,
-        to : document.getElementById('otherUserName').value,
-        roomName: roomName
+        to : document.getElementById('otherUserName').value
     };
     sendMessage(message);
 }
 
+/**
+ * Tell room you're leaving and remove all video elements
+ */
 function leaveRoom(){
+    disableElements("leaveRoom");
+    var message = {
+        id: "leaveRoom"
+    };
+
+    participants[sessionId].rtcPeer.dispose();
+    sendMessage(message);
+    participants = {};
     var myNode = document.getElementById("video_list");
     while (myNode.firstChild) {
         myNode.removeChild(myNode.firstChild);
     }
-    document.getElementById('leaveRoom').disabled = true;
-    document.getElementById('roomName').disabled = false;
-    document.getElementById('joinRoom').disabled = false;
-    document.getElementById('sendInvite').disabled = false;
-    document.getElementById('otherUserName').disabled = false;
-    var message = {
-        id: "leaveRoom"
-    };
-    sendMessage(message);
-    participants = {};
 }
 
+/**
+ * Javascript Confirm to see if user accepts invite
+ * @param message
+ */
 function incomingCall(message) {
     var joinRoomMessage = message;
     if (confirm('User ' + message.from
             + ' is calling you. Do you accept the call?')) {
-        leaveRoom();
+        if(Object.keys(participants).length > 0){
+            leaveRoom();
+        }
+        console.log('message');
+        console.log(message);
         joinRoom(joinRoomMessage.roomName);
     } else {
         var response = {
@@ -169,6 +166,10 @@ function incomingCall(message) {
     }
 }
 
+/**
+ * Request video from all existing participants
+ * @param message
+ */
 function onExistingParticipants(message) {
     var constraints = {
         audio: true,
@@ -216,6 +217,10 @@ function onExistingParticipants(message) {
     }
 }
 
+/**
+ * Add new participant locally and request video from new participant
+ * @param sender
+ */
 function receiveVideoFrom(sender) {
     console.log(sessionId + " receive video from " + sender);
     var participant = new Participant(sender);
@@ -237,10 +242,18 @@ function receiveVideoFrom(sender) {
     });
 }
 
+/**
+ * Receive video from new participant
+ * @param message
+ */
 function onNewParticipant(message) {
     receiveVideoFrom(message.new_user_id)
 }
 
+/**
+ * Destroy videostream/DOM element on participant leaving room
+ * @param message
+ */
 function onParticipantLeft(message) {
     var participant = participants[message.sessionId];
     participant.dispose();
@@ -255,6 +268,10 @@ function onParticipantLeft(message) {
     video.parentNode.removeChild(video);
 }
 
+/**
+ * Required WebRTC method
+ * @param message
+ */
 function onReceiveVideoAnswer(message) {
     var participant = participants[message.sessionId];
     participant.rtcPeer.processAnswer(message.sdpAnswer, function (error) {
@@ -290,15 +307,33 @@ function createVideoForParticipant(participant) {
     return document.getElementById(videoId);
 }
 
-function generateUUID(){
-    var d = new Date().getTime();
-    if(window.performance && typeof window.performance.now === "function"){
-        d += performance.now();; //use high-precision timer if available
+function disableElements(functionName){
+    if(functionName === "register"){
+        document.getElementById('userName').disabled = true;
+        document.getElementById('register').disabled = true;
+        document.getElementById('joinRoom').disabled = false;
+        document.getElementById('roomName').disabled = false;
+        document.getElementById('sendInvite').disabled = false;
+        document.getElementById('otherUserName').disabled = false;
     }
-    var uuid = 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
-        var r = (d + Math.random()*16)%16 | 0;
-        d = Math.floor(d/16);
-        return (c=='x' ? r : (r&0x3|0x8)).toString(16);
-    });
-    return uuid;
+    if(functionName === "joinRoom"){
+        document.getElementById('roomName').disabled = true;
+        document.getElementById('joinRoom').disabled = true;
+        document.getElementById('sendInvite').disabled = false;
+        document.getElementById('otherUserName').disabled = false;
+        document.getElementById('joinRoom').disabled = false;
+        document.getElementById('leaveRoom').disabled = false;
+    }
+    if(functionName === "leaveRoom"){
+        document.getElementById('leaveRoom').disabled = true;
+        document.getElementById('roomName').disabled = false;
+        document.getElementById('joinRoom').disabled = false;
+        document.getElementById('sendInvite').disabled = false;
+        document.getElementById('otherUserName').disabled = false;
+    }
+    if(functionName === "call"){
+        document.getElementById('roomName').disabled = true;
+        document.getElementById('joinRoom').disabled = true;
+        document.getElementById('leaveRoom').disabled = false;
+    }
 }
