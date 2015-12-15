@@ -331,7 +331,6 @@ function disableElements(functionName){
         document.getElementById('joinRoom').disabled = true;
         document.getElementById('sendInvite').disabled = false;
         document.getElementById('otherUserName').disabled = false;
-        document.getElementById('joinRoom').disabled = false;
         document.getElementById('leaveRoom').disabled = false;
     }
     if(functionName === "leaveRoom"){
