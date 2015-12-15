@@ -176,6 +176,13 @@ function WebRtcPeer(mode, options, callback) {
                 candidategatheringdone = true;
         }
     };
+    pc.onaddstream = function(event){
+        AdapterJS.webRTCReady(function(isUsingPlugin) {
+            if (isUsingPlugin) {
+                localVideo = attachMediaStream(localVideo, videoStream);
+            }
+        });
+    };
     this.on('newListener', function (event, listener) {
         if (event === 'icecandidate' || event === 'candidategatheringdone') {
             while (candidatesQueueOut.length) {
@@ -248,7 +255,12 @@ function WebRtcPeer(mode, options, callback) {
         }
     }
     this.showLocalVideo = function () {
-        localVideo = attachMediaStream(localVideo, videoStream);
+        // IE must do this at pc.onaddstream otherwise audio won't work, Firefox must do it here
+        AdapterJS.webRTCReady(function(isUsingPlugin) {
+            if (!isUsingPlugin) {
+                localVideo = attachMediaStream(localVideo, videoStream);
+            }
+        });
     };
     this.processAnswer = function (sdpAnswer, callback) {
         callback = (callback || noop).bind(this);
@@ -342,6 +354,7 @@ function WebRtcPeer(mode, options, callback) {
         AdapterJS.webRTCReady(function(isUsingPlugin) {
             if(isUsingPlugin){
                 if(localVideo){
+                    // IE/Safari must close the videoStream outside of the Peerconnection to turn off webcam
                     videoStream.stop();
                     localVideo = attachMediaStream(localVideo, null);
                 }

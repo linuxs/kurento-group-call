@@ -22,6 +22,7 @@ socket.on("id", function (id) {
 socket.on("message", function (message) {
     switch (message.id) {
         case "registered":
+            disableElements("register");
             console.log(message.data);
             break;
         case "incomingCall":
@@ -82,7 +83,6 @@ function sendMessage(data) {
  * Register to server
  */
 function register() {
-    disableElements("register");
     var data = {
         id: "register",
         name: document.getElementById('userName').value
@@ -212,6 +212,9 @@ function onExistingParticipants(message) {
         localVideoCurrentId = sessionId;
         localVideo.src = localParticipant.rtcPeer.localVideo.src;
         localVideo.muted = true;
+
+        // Internet Explorer fix to fix audio :( has to be done after attachMediaStream is finished
+        //participants[sessionId].rtcPeer.getLocalStream().getAudioTracks()[0].enabled = true;
 
         console.log("local participant id : " + sessionId);
         this.generateOffer(localParticipant.offerToReceiveVideo.bind(localParticipant));
