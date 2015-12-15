@@ -355,7 +355,7 @@ function WebRtcPeer(mode, options, callback) {
             if(isUsingPlugin){
                 if(localVideo){
                     // IE/Safari must close the videoStream outside of the Peerconnection to turn off webcam
-                    videoStream.stop();
+                    streamStop(videoStream);
                     localVideo = attachMediaStream(localVideo, null);
                 }
                 if(remoteVideo){
