@@ -253,9 +253,6 @@ function join(socket, room, callback) {
         // register user to room
         room.participants[userSession.id] = userSession;
 
-        // register user in system
-        userRegistry.register(userSession);
-
         callback(null, userSession);
     });
 }

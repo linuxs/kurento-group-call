@@ -34,6 +34,7 @@ function trackStop(track) {
 function streamStop(stream) {
     stream.getTracks().forEach(trackStop);
 }
+
 function bufferizeCandidates(pc, onerror) {
     var candidatesQueue = [];
     pc.onsignalingstatechange = function (event) {
@@ -242,12 +243,12 @@ function WebRtcPeer(mode, options, callback) {
         if (remoteVideo) {
             var stream = pc.getRemoteStreams()[0];
             var url = stream;
-            attachMediaStream(remoteVideo, stream);
+            remoteVideo = attachMediaStream(remoteVideo, stream);
             console.log('Remote URL:', url);
         }
     }
     this.showLocalVideo = function () {
-        attachMediaStream(localVideo, videoStream);
+        localVideo = attachMediaStream(localVideo, videoStream);
     };
     this.processAnswer = function (sdpAnswer, callback) {
         callback = (callback || noop).bind(this);
@@ -338,16 +339,30 @@ function WebRtcPeer(mode, options, callback) {
         setTimeout(start, 0);
     }
     this.on('_dispose', function () {
-        if (localVideo) {
-            localVideo.pause();
-            localVideo.src = '';
-            localVideo.load();
-        }
-        if (remoteVideo) {
-            remoteVideo.pause();
-            remoteVideo.src = '';
-            remoteVideo.load();
-        }
+        AdapterJS.webRTCReady(function(isUsingPlugin) {
+            if(isUsingPlugin){
+                if(localVideo){
+                    videoStream.stop();
+                    localVideo = attachMediaStream(localVideo, null);
+                }
+                if(remoteVideo){
+                    remoteVideo = attachMediaStream(remoteVideo, null);
+                }
+            }
+            else{
+                if (localVideo) {
+                    localVideo.pause();
+                    localVideo.src = '';
+                    localVideo.load();
+                }
+                if (remoteVideo) {
+                    remoteVideo.pause();
+                    remoteVideo.src = '';
+                    remoteVideo.load();
+                }
+            }
+            pc.close();
+        });
         self.removeAllListeners();
         if (window.cancelChooseDesktopMedia !== undefined) {
             window.cancelChooseDesktopMedia(guid);
@@ -411,10 +426,10 @@ WebRtcPeer.prototype.dispose = function () {
     var pc = this.peerConnection;
     try {
         if (pc) {
-            if (pc.signalingState === 'closed')
+            if (pc.signalingState === 'closed') {
                 return;
+            }
             pc.getLocalStreams().forEach(streamStop);
-            pc.close();
         }
     } catch (err) {
         console.warn('Exception disposing webrtc peer ' + err);

@@ -3,8 +3,8 @@
  */
 
 var socket = io.connect();
-var mainVideoCurrentId;
-var mainVideo;
+var localVideoCurrentId;
+var localVideo;
 var sessionId;
 
 var participants = {};
@@ -83,7 +83,6 @@ function sendMessage(data) {
  */
 function register() {
     disableElements("register");
-    mainVideo = document.getElementById("main_video");
     var data = {
         id: "register",
         name: document.getElementById('userName').value
@@ -97,6 +96,8 @@ function register() {
  */
 function joinRoom(roomName) {
     disableElements('joinRoom');
+
+    // Check if roomName was given or if it's joining via roomName input field
     if(typeof roomName == 'undefined'){
         roomName = document.getElementById('roomName').value;
     }
@@ -127,6 +128,7 @@ function call() {
  * Tell room you're leaving and remove all video elements
  */
 function leaveRoom(){
+
     disableElements("leaveRoom");
     var message = {
         id: "leaveRoom"
@@ -135,6 +137,7 @@ function leaveRoom(){
     participants[sessionId].rtcPeer.dispose();
     sendMessage(message);
     participants = {};
+
     var myNode = document.getElementById("video_list");
     while (myNode.firstChild) {
         myNode.removeChild(myNode.firstChild);
@@ -186,7 +189,8 @@ function onExistingParticipants(message) {
     // create video for current user to send to server
     var localParticipant = new Participant(sessionId);
     participants[sessionId] = localParticipant;
-    var video = mainVideo;
+    localVideo = document.getElementById("local_video");
+    var video = localVideo;
 
     // bind function so that calling 'this' in that function will receive the current instance
     var options = {
@@ -201,10 +205,13 @@ function onExistingParticipants(message) {
             return console.error(error);
         }
 
+        // Set localVideo to new object if on IE/Safari
+        localVideo = document.getElementById("local_video");
+
         // initial main video to local first
-        mainVideoCurrentId = sessionId;
-        mainVideo.src = localParticipant.rtcPeer.localVideo.src;
-        mainVideo.muted = true;
+        localVideoCurrentId = sessionId;
+        localVideo.src = localParticipant.rtcPeer.localVideo.src;
+        localVideo.muted = true;
 
         console.log("local participant id : " + sessionId);
         this.generateOffer(localParticipant.offerToReceiveVideo.bind(localParticipant));
