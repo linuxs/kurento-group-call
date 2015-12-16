@@ -205,6 +205,8 @@ function join(socket, room, callback) {
             }
             return callback(error);
         }
+        outgoingMedia.setMaxVideoSendBandwidth(30);
+        outgoingMedia.setMinVideoSendBandwidth(20);
         userSession.outgoingMedia = outgoingMedia;
 
         // add ice candidate the get sent before endpoint is established
@@ -421,6 +423,8 @@ function getEndpointForUser(userSession, sender, callback) {
                     return callback(error);
                 }
                 console.log('user : ' + userSession.id + ' successfully created pipeline');
+                incomingMedia.setMaxVideoSendBandwidth(30);
+                incomingMedia.setMinVideoSendBandwidth(20);
                 userSession.incomingMedia[sender.id] = incomingMedia;
 
                 // add ice candidate the get sent before endpoint is established
