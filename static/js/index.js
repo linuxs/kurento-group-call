@@ -178,7 +178,8 @@ function onExistingParticipants(message) {
         audio: true,
         video: {
             mandatory: {
-                maxWidth: 320,
+                maxWidth: 160,
+                maxHeight: 160,
                 maxFrameRate: 15,
                 minFrameRate: 15
             }
@@ -308,6 +309,7 @@ function createVideoForParticipant(participant) {
     var videoId = "video-" + participant.id;
     var video = document.createElement('video');
 
+    video.style = "width: 150px; height: 150px; float: left;"
     video.autoplay = true;
     video.id = videoId;
     video.poster = "img/webrtc.png";
